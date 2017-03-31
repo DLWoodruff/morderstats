@@ -1,6 +1,7 @@
 \documentclass[11pt]{article}
 
 \title{\textit{morderstats.py} Documentation}
+\author{DLW, et al.}
 \date{\today}
 
 \usepackage{framed}
@@ -13,20 +14,28 @@
 	breaklines=true	
 }
 
+
 \begin{document}
 \maketitle
 
-This document describes how to use the program \textit{morderstats.py} to generate multivariate prediction regions from forecast data. The name \textit{morderstats} is short for \textit{multivariate order statistics} and indicates the capability of this program to produce multivariate information using different methods and then order them based on certain metrics. Currently the only methods of producing prediction regions are by using the Mahalanobis distance, Direct Convex Hull Peeling, and Halfspace Convex Hull Peeling.
+This document describes how to use the Python program
+\textit{morderstats.py} to generate multivariate prediction regions
+from forecast data. The name \textit{morderstats} is short for
+\textit{multivariate order statistics}. The methods supported are
+Mahalanobis distance, Direct Convex Hull Peeling, and Halfspace Convex
+Hull Peeling.
 
 \section{Required Modules}
 
 \textit{morderstats.py} is dependent on the entire scipy stack. This is most easily obtainable by downloading and installing the most recent Anaconda distribution and can be found at  \url{https://www.continuum.io/downloads}. Alternatively, one can install the modules \textit{numpy}, \textit{scipy}, \textit{matplotlib}, and \textit{pandas} by using the command \texttt{pip install <module>} and replacing \texttt{<module>} with the appropriate module name. To achieve complete functionality of the program, you will need to have installed \textit{scipy} 0.19 or later.
 
+The program is intended to run on Unix platforms and may not run well on Windows.
+
 There is an alternate implementation of the program which is dependent on the module \textit{pyhull}. This can be installed using the command \texttt{pip install pyhull}.
 
 \section{Formatting the Input Data}
 
-To properly use this program, the input file should simply contain the raw data. Each row should represent an individual point in multiple dimensions, and each column should represent a dimension. The following text demonstrates how to properly format the file:
+The input file should simply contain the raw data. Each row should represent an individual point in multiple dimensions, and each column should represent a dimension. The following text demonstrates how to properly format the file:
 
 \begin{framed}
 	\noindent
@@ -39,7 +48,7 @@ To properly use this program, the input file should simply contain the raw data.
 
 \section{Configuring Options}
 
-To actually execute the program, the user must create an options file which specifies the various options required for running the program. For clarity purposes, we will refer to this file as \texttt{morderstats\_exec.txt} but note that this file can be given any name.
+To execute the program, the user must create an options file which specifies the various options required for running the program. For clarity purposes, we will refer to this file as \texttt{morderstats\_exec.txt} but note that this file can be given any name.
 
 This file must start with the following line verbatim:
 \begin{center}
@@ -83,14 +92,16 @@ The second file produced will be a plot of the region or regions.
 The following figure is an example plot that was produced by \textit{morderstats}
 
 \begin{center}
-\includegraphics[height=200pt]{direct_region1vs2.png}
+\includegraphics[height=200pt]{direct_region0.png}
 \end{center}
 
 \section{Testing}
-This program comes with an associated test suite for testing if \textit{morderstats} or the associated modules in \textit{pint} function properly.
-To run this tester, simply execute the following command in the terminal in the \textit{pint} directory:
+This program comes with an associated test suite for testing if \textit{morderstats} functions properly.
+To run this tester, simply execute the following command in the terminal in the \textit{morderstats} directory:
 \begin{center}
 	\texttt{python tester.py}
 \end{center}
+
+This may take a few minutes.
 
 \end{document}

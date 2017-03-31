@@ -161,7 +161,7 @@ def halfspace_regions(points, write_directory, write_file, alpha=None):
     region = distributions.HalfspaceDepthRegion(points)
 
     if PYHULL_INSTALLED:
-        distr = distributions.MultivariateEmpiricalDistribution(points, raw_data=True)
+        distr = distributions.MultivariateEmpriicalDistribution(points, raw_data=True)
         if alpha is not None:
             list_of_points, hull, _, realized_alpha = distr.halfspacedepth_quantile_region(alpha)
             peels = [hull.points[hull.vertices]]
