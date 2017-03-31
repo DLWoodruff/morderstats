@@ -1,0 +1,1 @@
+load,pint_input/CAISO/Load/caiso_load_070114_063015.csv,pint_input/CAISO/Load/one_day_load.csv,zuh,segment_input.txt

@@ -1,0 +1,3 @@
+#comment at beginning
+wind,test_files/five_days_wind_NP.csv,test_files/day_six_wind_NP.csv,wind,segment_input.txt #inline comment
+#comment at end
