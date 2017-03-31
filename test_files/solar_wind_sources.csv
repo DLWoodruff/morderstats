@@ -1,2 +1,0 @@
-solar,test_files/five_days_solar_NP.csv,test_files/day_six_solar_NP.csv,solar,segment_input.txt
-wind,test_files/five_days_wind_NP.csv,test_files/day_six_wind_NP.csv,wind,segment_input.txt
