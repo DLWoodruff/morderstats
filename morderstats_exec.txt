@@ -1,0 +1,5 @@
+command/exec morderstats.py
+--sources-file test_files/random_data.csv
+--method direct
+--write-file direct_regions.txt
+--write-directory tester
