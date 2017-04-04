@@ -27,11 +27,11 @@ Hull Peeling.
 
 \section{Required Modules}
 
-\textit{morderstats.py} is dependent on the entire scipy stack. This is most easily obtainable by downloading and installing the most recent Anaconda distribution and can be found at  \url{https://www.continuum.io/downloads}. Alternatively, one can install the modules \textit{numpy}, \textit{scipy}, \textit{matplotlib}, and \textit{pandas} by using the command \texttt{pip install <module>} and replacing \texttt{<module>} with the appropriate module name. To achieve complete functionality of the program, you will need to have installed \textit{scipy} 0.19 or later.
+\textit{morderstats.py} is dependent on the entire scipy stack. This is most easily obtainable by downloading and installing the most recent Anaconda distribution and can be found at  \url{https://www.continuum.io/downloads}. Alternatively, one can install the modules \textit{numpy}, \textit{scipy}, \textit{matplotlib}, and \textit{pandas} by using the command \texttt{pip install <module>} and replacing \texttt{<module>} with the appropriate module name. 
 
 The program is intended to run on Unix platforms and may not run well on Windows.
 
-There is an alternate implementation of the program which is dependent on the module \textit{pyhull}. This can be installed using the command \texttt{pip install pyhull}.
+There are two implementations of the halfspace algorithm, one is dependent on the module \textit{pyhull} and the other uses the most recent version of \textit{scipy}. To use the first implementation, you must have a UNIX based operating system and the module \textit{pyhull} which can be installed with the command \texttt{pip install pyhull}. To use the second implementation, you must have at least \textit{scipy} 0.19. You can update your version of scipy to the most recent version with the command \texttt{pip install scipy --upgrade}.
 
 \section{Formatting the Input Data}
 
@@ -56,7 +56,7 @@ This file must start with the following line verbatim:
 \end{center}
 This specifies that the options file is for executing \textit{morderstats.py}
 
-There are four options that are mandatory and one option that is optional.
+There are four options that are mandatory and two options that are optional.
 The first option that must be set is \texttt{--sources-file} which specifies the data file with which you wish to compute multivariate order statistics.
 The second option that must be set is \texttt{--method} which designates which method you wish to use for producing the prediction regions.
 If set to \textit{mahal}, then regions will be computed using the mahalanobis distance.
@@ -67,6 +67,8 @@ The option \texttt{--write-file} must be set and designates the name of the text
 The option \texttt{--write-directory} must also be set and designates the name of the directory to contain all files produced by \textit{morderstats}.
 
 The option \texttt{--alpha} is optional and designates the desired proportion of points to be outside the prediction region. If unspecified and \texttt{--method} is set to \textit{mahal}, then regions will be computed for $\alpha = 0.01,0.02,\ldots,0.99$. If it is unspecified and the \texttt{--method} is set to either \textit{halfspace} or \textit{direct}, then the entire sequence of convex hulls will be computed by the respective method.
+
+The option \texttt{--use-pyhull} specifies that you wish to use the halfspace implementation which is dependent on \textit{pyhull}. If unspecified, it will attempt to use the \textit{scipy}-based implementation.
 
 The following figure demonstrates an example for how the options file could be written:
 
@@ -92,7 +94,7 @@ The second file produced will be a plot of the region or regions.
 The following figure is an example plot that was produced by \textit{morderstats}
 
 \begin{center}
-\includegraphics[height=200pt]{direct_region0.png}
+\includegraphics[height=200pt]{direct_region1vs2.png}
 \end{center}
 
 \section{Testing}

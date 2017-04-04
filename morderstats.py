@@ -82,6 +82,8 @@ def main():
         args.use_pyhull = False
 
     if not args.use_pyhull:
+        global PYHULL_INSTALLED
+        PYHULL_INSTALLED = False
         scipy_version = int(scipy.__version__.split('.')[1])
         if scipy_version < 19:
             print("Cannot use scipy implementation as your version of scipy is too old")

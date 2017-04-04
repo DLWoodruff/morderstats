@@ -3,3 +3,5 @@ command/exec morderstats.py
 --method direct
 --write-file direct_regions.txt
 --write-directory tester
+--alpha 0.5
+--use-pyhull
