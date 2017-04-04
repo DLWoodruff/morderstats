@@ -1086,7 +1086,7 @@ class HalfspaceDepthRegion(RegionSequence):
         RegionSequence.__init__(self, points)
         halfspaces = {}
 
-        self.interior_point = interior_point = np.mean(points, axis=0)
+        interior_point = np.mean(self.curr_points, axis=0)
 
         for i, combination in enumerate(itertools.combinations(self.all_points, self.ndim)):
             try:
@@ -1119,8 +1119,9 @@ class HalfspaceDepthRegion(RegionSequence):
 
         halfspaces = np.array([halfspace.as_array() for halfspace in halfspaces])
 
-        halfspace_intersection = scipy.spatial.HalfspaceIntersection(halfspaces,
-                                                                     self.interior_point)
+        interior_point = np.mean(self.curr_points, axis=0)
+
+        halfspace_intersection = scipy.spatial.HalfspaceIntersection(halfspaces, interior_point)
 
         self.hull = scipy.spatial.ConvexHull(halfspace_intersection.intersections)
 

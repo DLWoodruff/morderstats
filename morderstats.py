@@ -56,10 +56,12 @@ parser.add_argument("--alpha",
                     type=float,
                     default=None)
 
-parser.add_argument("--multiple-sources",
-                    help="This option signifies if there are multiple files"
-                         "which contain the data to be evaluated")
-
+parser.add_argument("--use-pyhull",
+                    help="If this option is set, then the program will use the implementation"
+                         "of the halfspace algorithm which is dependent on pyhull. If it is not"
+                         "set, it will try to use the scipy implementation",
+                    dest="use_pyhull",
+                    action="store_true")
 
 def main():
     args = parser.parse_args()
@@ -73,6 +75,18 @@ def main():
         else:
             sys.exit()
     os.mkdir(args.write_directory)
+
+    if args.use_pyhull and not PYHULL_INSTALLED:
+        print("Cannot find the module pyhull, please make sure it is installed in the proper location.")
+        print("Will attempt to use the scipy implementation")
+        args.use_pyhull = False
+
+    if not args.use_pyhull:
+        scipy_version = int(scipy.__version__.split('.')[1])
+        if scipy_version < 19:
+            print("Cannot use scipy implementation as your version of scipy is too old")
+            print("To use the scipy implementation, you must update to at least version 0.19.0")
+            sys.exit(1)
 
     with open(args.sources_file) as f:
         dataframe = pd.read_csv(f, header=None)
