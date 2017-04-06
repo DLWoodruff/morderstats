@@ -872,6 +872,7 @@ class Region:
         self.hull = scipy.spatial.ConvexHull(self.all_points)
         self._vertex_indices = self.hull.vertices
         self.points_in_hull = self.all_points
+        self.realized_alpha = 0
 
     def plot(self, name, directory=None, title=None, xlabel=None, ylabel=None):
         """
@@ -923,6 +924,41 @@ class Region:
 
             plt.savefig(directory + os.sep + name + str(dim1) + 'vs' + str(dim2) + '.png')
             plt.close()
+
+    def plot3d(self, filename):
+        """
+        Plot 3 dimensional regions in a 3 dimensional plot
+        :param filename:
+        :return:
+        """
+
+        if self.ndim != 3:
+            raise RuntimeError("The dimensionality of the points must be 3 dimensional")
+
+        from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        polygons = []
+
+        plt.plot(self.all_points[:,0], self.all_points[:,1], self.all_points[:,2], 'r.')
+
+        for simplex in self.hull.simplices:
+            polygon = self.hull.points[simplex]
+            polygons.append(polygon)
+
+        polygon_collection = Poly3DCollection(polygons)
+        polygon_collection.set_alpha(0.5)
+
+        ax.add_collection3d(polygon_collection, zs='z')
+        ax.set_xlabel('Dimension 1')
+        ax.set_ylabel('Dimension 2')
+        ax.set_zlabel('Dimension 3')
+        ax.set_title('Convex Region for alpha = {}'.format(self.realized_alpha))
+
+        plt.savefig(filename)
+
 
 
     def sample(self, n=1):
