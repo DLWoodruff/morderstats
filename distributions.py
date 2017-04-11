@@ -9,15 +9,15 @@ distributions.py
 import math
 import os
 from operator import itemgetter
+import itertools
+import copy
 
-import pandas as pd
 import numpy as np
 import scipy.linalg
 import scipy.spatial
+import scipy.optimize
 import matplotlib.pyplot as plt
-import itertools
-import copy
-###import globals
+
 
 try:
     import pyhull.halfspace as phhs
@@ -306,12 +306,11 @@ class MultivariateEmpiricalDistribution(Distribution):
         # Now we look at each hyperplane.
         for plane in hyperplanes:
             # The hyperplanes have a format that consists of points and in the end two other values that we don't need.
-            del plane[-2]
             # Now it is only points in each plane we can look at.
-            for point in plane:
+            for point in plane[:-2]: # last 2 values in plane are count on either side and normal vector
                 # Our list of points now appends each point.
                 points.append(point)
-        hyperplanematrix = np.matrix(points).T  # dimensions as columns
+        hyperplanematrix = np.array(points)
         mean = np.mean(hyperplanematrix, axis=0)
         return mean
 
@@ -526,7 +525,7 @@ class MultivariateEmpiricalDistribution(Distribution):
         """
         # this will probably not work.
         phhs_halfspaces = []
-        point_in_center = np.array(self.compute_mean_from_hyperplanes(halfspaces).tolist()[0])
+        point_in_center = np.array(self.compute_mean_from_hyperplanes(halfspaces).tolist())
         for halfspace in halfspaces:
             basis = []
             del halfspace[-2]
@@ -850,6 +849,7 @@ class Halfspace:
 
     def as_array(self):
         """
+        If the halfspace is defined by equation a1x1 + a2x2 + ... + anxn + b <= 0
         Writes the halfspace in notation [a1 a2 a3 ... an b]
 
         Returns:
@@ -1155,7 +1155,7 @@ class HalfspaceDepthRegion(RegionSequence):
 
         halfspaces = np.array([halfspace.as_array() for halfspace in halfspaces])
 
-        interior_point = np.mean(self.curr_points, axis=0)
+        interior_point = self._compute_interior_point(halfspaces)
 
         halfspace_intersection = scipy.spatial.HalfspaceIntersection(halfspaces, interior_point)
 
@@ -1169,6 +1169,41 @@ class HalfspaceDepthRegion(RegionSequence):
         self.all_hulls.append(halfspace_intersection.intersections)
         self.curr_alpha = 1 - len(self.curr_points) / len(self.all_points)
         self.all_alphas.append(self.curr_alpha)
+
+    def _compute_interior_point(self, halfspaces):
+        """
+        Solves a linear program to compute an interior point of the intersection of halfspaces
+        The linear program is
+            max y
+        subject to
+            Ax + y||A_i|| <= -b
+
+        where A is composed of the normal vectors of each halfspace, A_i is the ith row and
+        ||*|| is the euclidean norm
+        Args:
+            halfspaces: A 2-D array of halfspaces. Each row is of the form
+                              [a1 a2 ... an b] where the halfspace is defined by a1x1 + a2x2 + .. + anxn + b <= 0
+        Returns:
+            An n-vector which is contained in the intersection of halfspaces
+        """
+
+        num_halfspaces = halfspaces.shape[0]
+
+        # compute the norm of each normal vector for each halfspace
+        row_norms = np.linalg.norm(halfspaces[:, :-1], axis=1)
+        norm_vector = np.reshape(row_norms, (num_halfspaces, 1))
+
+        A = np.hstack((halfspaces[:,:-1], norm_vector))
+        b = -halfspaces[:,-1:]
+
+        # A feasible solution to linear programming problem is [0 0 ... 0 -1]
+        feasible_solution = np.zeros(self.ndim+1)
+        feasible_solution[-1] = -1
+
+        solution = scipy.optimize.linprog(feasible_solution, A_ub=A, b_ub=b)
+
+        return solution.x[:-1]
+
 
 
 class DirectRegion(RegionSequence):

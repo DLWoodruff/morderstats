@@ -19,9 +19,9 @@ import scipy.spatial
 import pandas as pd
 try:
     import pyhull
-    PYHULL_INSTALLED = True
+    USE_PYHULL = True
 except ImportError:
-    PYHULL_INSTALLED = False
+    USE_PYHULL = False
 
 import distributions
 
@@ -76,14 +76,15 @@ def main():
             sys.exit()
     os.mkdir(args.write_directory)
 
-    if args.use_pyhull and not PYHULL_INSTALLED:
+    global USE_PYHULL
+
+    if args.use_pyhull and not USE_PYHULL:
         print("Cannot find the module pyhull, please make sure it is installed in the proper location.")
         print("Will attempt to use the scipy implementation")
         args.use_pyhull = False
 
     if not args.use_pyhull:
-        global PYHULL_INSTALLED
-        PYHULL_INSTALLED = False
+        USE_PYHULL = False
         scipy_version = int(scipy.__version__.split('.')[1])
         if scipy_version < 19:
             print("Cannot use scipy implementation as your version of scipy is too old")
@@ -176,7 +177,7 @@ def halfspace_regions(points, write_directory, write_file, alpha=None):
 
     region = distributions.HalfspaceDepthRegion(points)
 
-    if PYHULL_INSTALLED:
+    if USE_PYHULL:
         distr = distributions.MultivariateEmpriicalDistribution(points, raw_data=True)
         if alpha is not None:
             list_of_points, hull, _, realized_alpha = distr.halfspacedepth_quantile_region(alpha)
@@ -216,7 +217,7 @@ def direct_regions(points, write_directory, write_file, alpha=None):
     """
     region = distributions.DirectRegion(points)
 
-    if PYHULL_INSTALLED:
+    if USE_PYHULL:
         distr = distributions.MultivariateEmpiricalDistribution(points, raw_data=True)
         if alpha is not None:
             list_of_points, hull, _, realized_alpha = distr.direct_convex_hull_quantile_region(alpha)

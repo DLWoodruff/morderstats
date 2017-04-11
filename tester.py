@@ -7,14 +7,17 @@ to test some morderstat functionality.
 import unittest
 import os
 import shutil
-import datetime
 
 import numpy as np
 import pandas as pd
 
-###from pint import PredictionRegionEnvironment
+try:
+    import pyhull
+    PYHULL_INSTALLED = True
+except ImportError:
+    PYHULL_INSTALLED = False
+
 from distributions import UnivariateEmpiricalDistribution
-###from prediction_intervals import PredictionInterval
 import morderstats
 import distributions
 
@@ -119,6 +122,35 @@ class HalfspaceRegionTester(unittest.TestCase):
         self.assertTrue(self.region_sequence.equals_hull(region1))
         self.region_sequence.peel()
         self.assertTrue(self.region_sequence.equals_hull(region2))
+
+class PyHullTester(unittest.TestCase):
+    def setUp(self):
+        points = np.array([[1, 0], [2, 0], [3, 0],
+                           [0, 1], [0, 2], [0, 3],
+                           [-1, 0], [-2, 0], [-3, 0],
+                           [0, -1], [0, -2], [0, -3]])
+        self.region = distributions.MultivariateEmpiricalDistribution(points, raw_data=True)
+
+        lots_of_data = np.random.randn(100,2)
+
+        self.region2 = distributions.MultivariateEmpiricalDistribution(lots_of_data, raw_data=True)
+
+    @unittest.skipIf(not PYHULL_INSTALLED, "Pyhull is not installed, cannot test pyhull method")
+    def test_alphas(self):
+        self.region.mahalanobis_quantile_region(0)
+        self.region.mahalanobis_quantile_region(0.33)
+        self.region.mahalanobis_quantile_region(0.66)
+        self.region.mahalanobis_quantile_region(1)
+        self.region.halfspacedepth_quantile_region(1)
+        self.region.halfspacedepth_quantile_region(0.5)
+        self.region.direct_convex_hull_quantile_region(0.5)
+        self.region.direct_convex_hull_quantile_region(1)
+
+    @unittest.skipIf(not PYHULL_INSTALLED, "Pyhull is not installed, cannot test pyhull method")
+    def test_data(self):
+        self.region2.mahalanobis_quantile_region(1)
+        self.region2.halfspacedepth_quantile_region(1)
+        self.region2.direct_convex_hull_quantile_region(1)
 
 
 class MorderStatsTester(unittest.TestCase):
