@@ -819,7 +819,6 @@ class RegionSequence(Region):
             plt.ylabel("Dimension " + str(dim2))
             plt.savefig(directory + os.sep + name + str(dim1) + 'vs' + str(dim2) + '.png')
 
-        plt.savefig(name)
         plt.close()
 
     def set_region(self, alpha):
@@ -933,9 +932,12 @@ class HalfspaceDepthRegion(RegionSequence):
 
         interior_point = self._compute_interior_point(halfspaces)
 
-        halfspace_intersection = scipy.spatial.HalfspaceIntersection(halfspaces, interior_point)
+        try:
+            halfspace_intersection = scipy.spatial.HalfspaceIntersection(halfspaces, interior_point)
 
-        self.hull = scipy.spatial.ConvexHull(halfspace_intersection.intersections)
+            self.hull = scipy.spatial.ConvexHull(halfspace_intersection.intersections)
+        except scipy.spatial.qhull.QhullError:
+            raise ValueError("End of sequence, cannot peel anymore")
 
         self.curr_points = np.array([point for point in self.curr_points if in_hull(point, self.hull)])
         self.index += 1
