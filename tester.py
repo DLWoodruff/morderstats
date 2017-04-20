@@ -95,8 +95,42 @@ class HalfspaceRegionTester(unittest.TestCase):
         self.region_sequence.peel()
         self.assertTrue(self.region_sequence.equals_hull(region2))
 
+
+# These are all smoke tests for the documentation example
+class DocExampleTester(unittest.TestCase):
+    def setUp(self):
+        points = np.array([[101,101],
+                           [102,103],
+                           [102,107],
+                           [107,110],
+                           [104,115],
+                           [105,112],
+                           [105.2,107.4],
+                           [103.4,105.3]])
+
+        self.pyhull_region = distributions.MultivariateEmpiricalDistribution(points, raw_data=True)
+        self.mahal_region = distributions.MahalanobisRegion(points)
+        self.direct_region = distributions.DirectRegion(points)
+        self.halfspace_region = distributions.HalfspaceDepthRegion(points)
+
+    def test_pyhull(self):
+        self.pyhull_region.mahalanobis_quantile_region(1)
+        self.pyhull_region.halfspacedepth_quantile_region(1)
+        self.pyhull_region.direct_convex_hull_quantile_region(1)
+
+    def test_mahal_region(self):
+        self.mahal_region.set_region(1)
+
+    def test_halfspace_region(self):
+        self.halfspace_region.set_region(1)
+
+    def test_direct_region(self):
+        self.direct_region.set_region(1)
+
+
 class PyHullTester(unittest.TestCase):
     def setUp(self):
+        # toy example
         points = np.array([[1, 0], [2, 0], [3, 0],
                            [0, 1], [0, 2], [0, 3],
                            [-1, 0], [-2, 0], [-3, 0],
@@ -108,20 +142,28 @@ class PyHullTester(unittest.TestCase):
         self.region2 = distributions.MultivariateEmpiricalDistribution(lots_of_data, raw_data=True)
 
     @unittest.skipIf(not PYHULL_INSTALLED, "Pyhull is not installed, cannot test pyhull method")
-    def test_alphas(self):
+    def test_mahal_toy(self):
         self.region.mahalanobis_quantile_region(0)
         self.region.mahalanobis_quantile_region(0.33)
         self.region.mahalanobis_quantile_region(0.66)
         self.region.mahalanobis_quantile_region(1)
+
+    def test_halfspace_toy(self):
         self.region.halfspacedepth_quantile_region(1)
         self.region.halfspacedepth_quantile_region(0.5)
+
+    def test_direct_toy(self):
         self.region.direct_convex_hull_quantile_region(0.5)
         self.region.direct_convex_hull_quantile_region(1)
 
     @unittest.skipIf(not PYHULL_INSTALLED, "Pyhull is not installed, cannot test pyhull method")
-    def test_data(self):
+    def test_mahal_random(self):
         self.region2.mahalanobis_quantile_region(1)
+
+    def test_halfspace_random(self):
         self.region2.halfspacedepth_quantile_region(1)
+
+    def test_direct_random(self):
         self.region2.direct_convex_hull_quantile_region(1)
 
 
