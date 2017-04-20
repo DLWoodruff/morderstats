@@ -436,6 +436,10 @@ class MultivariateEmpiricalDistribution(Distribution):
                 if hyperplane[-2] == iter_hull:
                     relevant_hyperplanes.append(hyperplane)
 
+            if not relevant_hyperplanes:
+                print("End of Halfspace Region Sequence")
+                return nppoints, hull, points_to_display, 1 - quantilenow
+
             points = self.get_halfspacehull(relevant_hyperplanes)
 
             try:
