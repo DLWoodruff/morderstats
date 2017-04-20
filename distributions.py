@@ -425,7 +425,7 @@ class MultivariateEmpiricalDistribution(Distribution):
                     relevant_hyperplanes.append(hyperplane)
 
             if not relevant_hyperplanes:
-                print("End of Halfspace Region Sequence")
+                print("Reached End of Halfspace Region Sequence")
                 return nppoints, hull, points_to_display, 1 - quantilenow
 
             points = self.get_halfspacehull(relevant_hyperplanes)
@@ -460,10 +460,10 @@ class MultivariateEmpiricalDistribution(Distribution):
 
             # if the old hull was closer to the quantile than the new hull, we should use the old hull.
             if abs(1 - realised_quantile - alpha) < abs(1 - quantilenow - alpha) and quantilenow <= 1 - alpha:
-                print("realized alpha:", round(1 - realised_quantile, 2))
+                #print("realized alpha:", round(1 - realised_quantile, 2))
                 return oldnppoints, oldhull, oldpoints_to_display, 1 - realised_quantile
             realised_quantile = float(len(points_to_display)) / float(len(list_of_points))
-        print("realized alpha:", round(1 - quantilenow, 2))
+        #print("realized alpha:", round(1 - quantilenow, 2))
         return nppoints, hull, points_to_display, 1 - quantilenow
 
     def count_on_either_side(self, points_on_hyperplane, all_points):
