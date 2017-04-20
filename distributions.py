@@ -2,8 +2,6 @@
 distributions.py
   This module exports an abstract base class Distribution, which models the attributes of a probability distribution
   and lists methods (cdf, pdf, inverse cdfs) which should be present for any distribution.
-  It also defines a collection of basic distributions (empirical, normal, student, etc.) which can either be
-  fitted from data or parametrized.
 """
 
 import os
@@ -663,8 +661,13 @@ class Region:
         self.all_points = np.array(points)
         if self.all_points.ndim != 2:
             raise ValueError("The points array passed in should be a list of points or a 2-D array")
-        self.ndim = self.all_points.shape[1]
-        self.num_points = len(points)
+        self.num_points, self.ndim = self.all_points.shape
+        if self.num_points < self.ndim + 1:
+            print("To construct any convex region, you must have more points than you have dimensions")
+            print("You passed in {} points of dimension {}".format(self.num_points, self.ndim))
+            print("You must add more points to your dataset to construct regions")
+            raise RuntimeError("Failed to construct Region")
+
         self.hull = scipy.spatial.ConvexHull(self.all_points)
         self._vertex_indices = self.hull.vertices
         self.points_in_hull = self.all_points
@@ -882,12 +885,18 @@ class MahalanobisRegion(Region):
         """
         distance_percentile = np.percentile(self.distances, (1-alpha)*100)
         self.curr_points = self.all_points[self.distances <= distance_percentile]
+        while len(self.curr_points) < self.ndim + 1:
+            alpha -= .01
+            distance_percentile = np.percentile(self.distances, (1 - alpha) * 100)
+            self.curr_points = self.all_points[self.distances <= distance_percentile]
+
         self.points_in_hull = self.curr_points
 
         try:
             self.hull = scipy.spatial.ConvexHull(self.curr_points)
         except scipy.spatial.qhull.QhullError:
-            raise ValueError("Failure to reach alpha")
+            print("Failure to reach alpha specified, taking nearest convex hull")
+
 
         self.realized_alpha = len(self.curr_points) / len(self.all_points)
 

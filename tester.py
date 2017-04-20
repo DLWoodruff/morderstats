@@ -25,6 +25,13 @@ TEST_DIRECTORY = 'test_files'
 __version__ = 1.0
 
 
+class ErrorTester(unittest.TestCase):
+    def test_too_few_points(self):
+        points = np.array([[0,0,0], [1,2,3], [2,2,2]])
+        with self.assertRaises(RuntimeError):
+            distributions.MahalanobisRegion(points)
+
+
 class DirectRegionTester(unittest.TestCase):
     def setUp(self):
         # peels should be concentric diamonds
