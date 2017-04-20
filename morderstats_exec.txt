@@ -1,6 +1,6 @@
 command/exec morderstats.py
---sources-file test_files/random_data.csv
---method mahal
---write-file mahalanobis_regions.txt
+--sources-file test_files/toy_example.csv
+--method halfspace
+--write-file halfspace_regions.txt
 --write-directory output_dir
---alpha=0.5
+--use-pyhull
