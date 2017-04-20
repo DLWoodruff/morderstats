@@ -312,7 +312,11 @@ class MultivariateEmpiricalDistribution(Distribution):
         # 1. an index as used in the algorithm by Eddy (lower number of points on the side of the hyperplane)
         # 2. the normal, with which we can later calculate the intersections.
         while i < len(hyperplanes):
-            side_1, side_2, normal_vector = (self.count_on_either_side(hyperplanes[i], pointslist))
+            try:
+                side_1, side_2, normal_vector = (self.count_on_either_side(hyperplanes[i], pointslist))
+            except np.linalg.linalg.LinAlgError:
+                i += 1
+                continue
             hyperplanes[i].append(min(side_1, side_2))
             hyperplanes[i].append(normal_vector)
             i += 1
@@ -497,26 +501,11 @@ class MultivariateEmpiricalDistribution(Distribution):
             points.pop()
         hyperplane_mat = np.array(points)
         if normal_vector == []:
-            one_vector = []
-            zero_vector = []
-            i = 0
-            while i < self._p:
-                one_vector.append(1)
-                if i != 0:
-                    zero_vector.append(1)
-                else:
-                    zero_vector.append(0)
-                i += 1
+            one_vector = [1] * self._p
             one_vector = np.array(one_vector)
             # if this gives an error, we have to check the side.
             # Add this functionality, the first time it crashes on the next line.
-            try:
-                normal_vector = np.linalg.solve(hyperplane_mat, one_vector)
-            except np.linalg.linalg.LinAlgError:
-                raise RuntimeError("The data you have provided can not be used to produce a hull "
-                                   "with the halfspace convex hull peeling algorithm. "
-                                   "Please provide randomly generated data or real data "
-                                   "that does not feature so many symmetries.")
+            normal_vector = np.linalg.solve(hyperplane_mat, one_vector)
         side_a = 0
         side_b = 0
         for point in all_points:
