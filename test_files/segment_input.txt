@@ -1,2 +1,0 @@
-# name, column_name, selection_method, proportion
-forecasts,forecasts,window,0.2

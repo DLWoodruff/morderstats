@@ -1,2 +1,0 @@
-# name of source , history filename , forecast filename , source type , segment rules filename
-solar,test_files/five_days_solar_NP.csv,test_files/day_six_solar_NP.csv,solar,segment_input.txt

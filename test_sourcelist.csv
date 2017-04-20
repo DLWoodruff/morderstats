@@ -1,4 +1,0 @@
-# this file is a list of sources of uncertainty, line format:
-# name of source , history filename , forecast filename , source type , segment rules filename
-SoCalSolar,pint_input/CAISO/Solar/solar_forecast_actual_SP15_070114_063015.csv,pint_input/CAISO/Solar/one_day_SP.csv,solar,segment_input.txt
-NoCalSolar,pint_input/CAISO/Solar/solar_forecast_actual_NP15_070114_063015.csv,pint_input/CAISO/Solar/one_day_NP.csv,solar,segment_input.txt
