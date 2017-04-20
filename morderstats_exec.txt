@@ -1,6 +1,6 @@
 command/exec morderstats.py
---sources-file test_files/random_data_2d.csv
---method direct
---write-file direct_regions.txt
+--sources-file test_files/random_data.csv
+--method mahal
+--write-file mahalanobis_regions.txt
 --write-directory output_dir
---alpha 0.5
+--alpha=0.5

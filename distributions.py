@@ -6,7 +6,6 @@ distributions.py
   fitted from data or parametrized.
 """
 
-import math
 import os
 from operator import itemgetter
 import itertools
@@ -24,6 +23,7 @@ try:
     PYHULL_INSTALLED = True
 except ImportError:
     PYHULL_INSTALLED = False
+
 
 class Distribution:
     """
@@ -54,204 +54,6 @@ class Distribution:
         It may be better to modify this function so that it evaluates at multiple points
         """
         pass
-
-def interpolate_line(x1, y1, x2, y2):
-    """
-    This functions accepts two points (passed in as four arguments)
-    and returns the function of the line which passes through both points
-    """
-    if x1 == x2:
-        raise ValueError("x1 and x2 must be different values")
-
-    def f(x):
-        slope = (y2 - y1)/(x2 - x1)
-        return slope * (x - x1) + y1
-
-    return f
-
-
-def count_less_than_or_equal(xs, x):
-    """
-    Counts the number of elements less than or equal to x in
-    a sorted list xs
-
-    Args:
-        xs: A sorted list of elements
-        x: An element that you wish to find the number of elements less than it
-
-    Returns:
-        int: The number of elements in xs less than or equal to x
-    """
-    count = 0
-    for elem in xs:
-        if elem <= x:
-            count += 1
-        else:
-            return count
-
-
-class UnivariateEmpiricalDistribution(Distribution):
-    """
-    This class will fit an empirical distribution to a set of given points.
-    The cumulative distribution function of this distribution is defined for any
-    real number t to be the number of points in the sample less than or equal to t
-    divided by the number of points.
-    """
-
-    def __init__(self, points):
-        # the dimension of an empirical distribution is 1.
-        # For higher dimension please refer to the multivariate case.
-        self.dimension = 1
-        self.points = sorted(points)
-        self.cdf = self._construct_cdf(self.points)
-        self.inverse_cdf = self._construct_inverse_cdf(self.points)
-
-    def _construct_cdf(self, points, lower_bound=None, upper_bound=None):
-        """
-        This fits an empirical cdf to a sorted set of points.
-        If a lower bound is provided, any point smaller will have cdf value 0
-        If an upper bound is provided, any point larger will have cdf value 1
-        If either is not provided the value is estimated using the line between the nearest two points
-        """
-        def f(x):
-            n = len(points)
-            if n == 0:
-                raise RuntimeError("Your list of points to calculate the inverse cdf is empty. "
-                                   "One possible reason could be, that your day-ahead forecast file and "
-                                   "your historic forecast file do not match.")
-            lower_neighbor = None
-            lower_neighbor_index = None
-            upper_neighbor = None
-            upper_neighbor_index = None
-            for index in range(n):
-                if points[index] <= x:
-                    lower_neighbor = points[index]
-                    lower_neighbor_index = index
-                if points[index] > x:
-                    upper_neighbor = points[index]
-                    upper_neighbor_index = index
-                    break
-
-            if lower_neighbor == x:
-                cdf_x = (lower_neighbor_index + 1) / (n + 1)
-
-            elif lower_neighbor is None:  # x is smaller than all of the values in points
-                if lower_bound is None:
-                    x1 = points[0]
-                    index1 = count_less_than_or_equal(points, points[0])
-
-                    x2 = points[index1]
-                    index2 = count_less_than_or_equal(points, points[index1])
-
-                    y1 = index1 / (n + 1)
-                    y2 = index2 / (n + 1)
-                    interpolating_line = interpolate_line(x1, y1, x2, y2)
-                    cdf_x = max(0, interpolating_line(x))
-                else:
-                    if lower_bound > x:
-                        cdf_x = 0
-                    else:
-                        x1 = lower_bound
-                        x2 = upper_neighbor
-                        y1 = 0
-                        y2 = 1 / (n + 1)
-                        interpolating_line = interpolate_line(x1, y1, x2, y2)
-                        cdf_x = interpolating_line(x)
-
-            elif upper_neighbor is None:  # x is greater than all of the values in points
-                if upper_bound is None:
-                    j = n - 1
-                    while points[j] == points[n - 1]:
-                        j -= 1
-                    j -= 1
-                    # g(x) = a*x + b
-                    x1 = points[j]
-                    x2 = points[n - 1]
-                    y1 = j / (n + 1)
-                    y2 = n / (n + 1)
-                    interpolating_line = interpolate_line(x1, y1, x2, y2)
-                    cdf_x = min(1, interpolating_line(x))
-                else:
-                    if upper_bound < x:
-                        cdf_x = 1
-                    else:
-                        x1 = lower_neighbor
-                        x2 = upper_bound
-                        y1 = n / (n + 1)
-                        y2 = 1
-                        interpolating_line = interpolate_line(x1, y1, x2, y2)
-                        cdf_x = interpolating_line(x)
-            else:
-                x1 = lower_neighbor
-                x2 = upper_neighbor
-                y1 = (lower_neighbor_index + 1) / (n + 1)
-                y2 = (upper_neighbor_index + 1) / (n + 1)
-                interpolating_line = interpolate_line(x1, y1, x2, y2)
-                cdf_x = interpolating_line(x)
-
-            return cdf_x
-        return f
-
-    def _construct_inverse_cdf(self, points, lower_bound=None, upper_bound=None):
-        """
-        This function fits an inverse empirical cdf function to given points.
-        A lower and upper bound on the points may be provided
-        This returns the inverse cdf function
-        """
-        def f(x):
-            n = len(points)
-            if x < 0 or x > 1:
-                raise RuntimeError('A x has to be between 0 and 1!')
-            # compute 'index' of this x
-            index = x * (n + 1) - 1
-            first_index = count_less_than_or_equal(points, points[0]) - 1
-
-            if index < first_index:
-                if lower_bound is None:
-                    # take linear function through (0, points[0]) and (1, points[1])
-                    # NOTE: points[0]) could occur several times, so find the highest index j with points[j] = points[0]
-                    if n == 0:
-                        raise RuntimeError("Your list of points to calculate the inverse cdf is empty. "
-                                           "One possible reason could be, that your day-ahead forecast file and "
-                                           "your historic forecast file do not match.")
-
-                    first_index += 1
-                    second_index = count_less_than_or_equal(points, points[first_index])
-                    interpolating_line = interpolate_line(first_index/(n+1),points[0],
-                                                          second_index/(n+1),points[first_index])
-
-                    return interpolating_line(x)
-                else:
-                    return lower_bound * (1 / (n + 1) - x) / (1 / (n + 1)) + \
-                           points[0] * x / (1 / (n + 1))
-            elif index > n - 1:
-                if upper_bound is None:
-                    # take linear function through (n-2, points[n-2]) and (n-1, points[n-1])
-                    # NOTE: points[n-1] could occur several times,
-                    # so find the lowest index j with points[j] = points[n-1]
-                    j = n - 1
-                    while points[j] == points[j - 1]:
-                        j -= 1
-                        if j-1 == -len(points):
-                            print("Warning: all values for segmentation are the same (", points[j], ")")
-                            return points[j]
-                    # g(x) = a*x + b
-                    a = points[j] - points[j - 1]
-                    b = points[j - 1] - (points[j] - points[j - 1]) * (j - 1)
-                    return a * index + b
-                else:
-                    return points[n - 1] * \
-                           (1 - x) / (1 - n / (n + 1)) + \
-                           upper_bound * (x - n / (n + 1)) / (1 - n / (n + 1))
-            else:
-                if math.floor(index) == index:
-                    return points[math.floor(index)]
-                else:
-                    interpolating_line = interpolate_line(x1=math.floor(index), y1=points[math.floor(index)],
-                                                          x2=math.ceil(index), y2=points[math.ceil(index)])
-                    return interpolating_line(index)
-
-        return f
 
 
 class MultivariateEmpiricalDistribution(Distribution):
@@ -748,6 +550,7 @@ class MultivariateEmpiricalDistribution(Distribution):
         else:
             print("Warning: The convex hull of the two possible methods does not yield the same result.")
 
+
 class Halfspace:
     """
     This class is a representation of a halfspace built using scipy libraries
@@ -874,16 +677,14 @@ class Region:
         self.points_in_hull = self.all_points
         self.realized_alpha = 0
 
-    def plot(self, name, directory=None, title=None, xlabel=None, ylabel=None):
+    def plot(self, name, directory=None, title=None):
         """
         Plots the current region to a file with specified name and directory
-
+        Saves to a png file
         Args:
-            name (str): name of the file containing plot
+            name (str): name of the file containing plot excluding extension
             directory (str): name of directory to save the file to
             title (str): title of plot
-            xlabel (str): xlabel of plot
-            ylabel (str): ylabel of plot
         """
 
         if directory is None:
@@ -892,6 +693,9 @@ class Region:
         if not(os.path.isdir(directory)):
             print("Directory {} does not exist, making directory".format(directory))
             os.mkdir(directory)
+
+        if self.ndim == 3:
+            self.plot3d(name + '.png', directory)
 
         vertices = self.hull.points[self.hull.vertices]
 
@@ -912,25 +716,20 @@ class Region:
             else:
                 plt.title(title)
 
-            if xlabel is None:
-                plt.xlabel("Dimension " + str(dim1))
-            else:
-                plt.xlabel(xlabel)
-
-            if ylabel is None:
-                plt.ylabel("Dimension " + str(dim2))
-            else:
-                plt.ylabel(ylabel)
-
             plt.savefig(directory + os.sep + name + str(dim1) + 'vs' + str(dim2) + '.png')
             plt.close()
 
-    def plot3d(self, filename):
+    def plot3d(self, filename, directory=None):
         """
-        Plot 3 dimensional regions in a 3 dimensional plot
-        :param filename:
-        :return:
+        Plot 3 dimensional regions to a 3 dimensional plot
+
+        Args:
+            filename (str): The path to where the plot should be saved
+            directory (str): The name of the directory to store the file
         """
+
+        if directory is None:
+            directory = os.getcwd()
 
         if self.ndim != 3:
             raise RuntimeError("The dimensionality of the points must be 3 dimensional")
@@ -940,9 +739,13 @@ class Region:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        polygons = []
+        for point in self.all_points:
+            if in_hull(point, self.hull):
+                plt.plot([point[0]], [point[1]], [point[2]], 'r.', alpha=0.4)
+            else:
+                plt.plot([point[0]], [point[1]], [point[2]], 'r.')
 
-        plt.plot(self.all_points[:,0], self.all_points[:,1], self.all_points[:,2], 'r.')
+        polygons = []
 
         for simplex in self.hull.simplices:
             polygon = self.hull.points[simplex]
@@ -955,44 +758,9 @@ class Region:
         ax.set_xlabel('Dimension 1')
         ax.set_ylabel('Dimension 2')
         ax.set_zlabel('Dimension 3')
-        ax.set_title('Convex Region for alpha = {}'.format(self.realized_alpha))
+        ax.set_title('Convex Region for alpha = {:.2f}'.format(self.realized_alpha))
 
-        plt.savefig(filename)
-
-
-
-    def sample(self, n=1):
-        """
-        Basic Rejection sample algorithm.
-        Assume a uniform distribution over the hull.
-        Sample from a cube containing the hull and accept only if
-        the sample is contained in the hull.
-        Samples n points
-        Args:
-            n: The desired sample size
-        """
-
-        from scipy.spatial import Delaunay
-
-        points = []
-        hull_vertices = self.hull.points[self.hull.vertices]
-
-        lower_left_corner = [min(hull_vertices.T[i]) for i in range(self.ndim)]
-        upper_right_corner = [max(hull_vertices.T[i]) for i in range(self.ndim)]
-        hull = Delaunay(hull_vertices)
-
-        def sample_uniform_rectangle(lower_left, upper_right):
-            return np.array([np.random.uniform(low, high) for low, high in zip(lower_left, upper_right)])
-
-        while len(points) < n:
-            point = sample_uniform_rectangle(lower_left_corner, upper_right_corner)
-            if hull.find_simplex(point) >= 0:
-                points.append(point)
-
-        if n == 1:
-            return points[0]
-        else:
-            return np.array(points)
+        plt.savefig(directory + os.sep + filename)
 
     def equals_hull(self, other):
         """
@@ -1027,23 +795,42 @@ class RegionSequence(Region):
     def peel(self):
         raise NotImplemented("This method should be implemented in any subclass of RegionSequence")
 
-    def plot_sequence(self, filename):
+    def plot_sequence(self, name, directory):
         """
         Plots all the already generated convex hulls to the file specified
 
         Args:
-            filename (str): name fo file to save plot in
+            name (str): name of file to save plot in excluding extension
+            directory (str): Directory to store file in
+
         """
         plt.plot(self.all_points[:,0], self.all_points[:,1], '.')
-        for hull in self.all_hulls:
-            hull = scipy.spatial.ConvexHull(hull)
-            hull = hull.points[hull.vertices]
-            xs, ys = list(zip(*hull))
-            xs = list(xs) + [xs[0]]
-            ys = list(ys) + [ys[0]]
-            plt.plot(xs, ys, 'b-')
+        for i, peel in enumerate(self.all_hulls):
 
-        plt.savefig(filename)
+            hull = scipy.spatial.ConvexHull(peel)
+            vertices = hull.points[hull.vertices]
+
+            for j, comb in enumerate(itertools.combinations(range(len(vertices[0])), 2)):
+                dimensions = list(zip(*vertices))
+                xs, ys = dimensions[comb[0]], dimensions[comb[1]]
+                projection_hull = scipy.spatial.ConvexHull(list(zip(xs, ys)))
+                projection_hull_vertices = projection_hull.points[projection_hull.vertices]
+                xs, ys = zip(*projection_hull_vertices)
+                plt.figure(j)
+                plt.plot(xs + (xs[0],), ys + (ys[0],), 'k-')
+                real_points = list(zip(*self.all_points))
+                xs, ys = real_points[comb[0]], real_points[comb[1]]
+                plt.plot(xs, ys, 'b.')
+
+        for i, comb in enumerate(itertools.combinations(range(len(vertices[0])), 2)):
+            plt.figure(i)
+            dim1, dim2 = comb[0] + 1, comb[1] + 1  # change to 1 indexing
+            plt.title("{} Projection onto dimension {} versus dimension {}".format(name, dim1, dim2))
+            plt.xlabel("Dimension " + str(dim1))
+            plt.ylabel("Dimension " + str(dim2))
+            plt.savefig(directory + os.sep + name + str(dim1) + 'vs' + str(dim2) + '.png')
+
+        plt.savefig(name)
         plt.close()
 
     def set_region(self, alpha):
@@ -1161,9 +948,7 @@ class HalfspaceDepthRegion(RegionSequence):
 
         self.hull = scipy.spatial.ConvexHull(halfspace_intersection.intersections)
 
-        hull_vertices = self.hull.points[self.hull.vertices]
-
-        self.curr_points = np.array([point for point in self.curr_points if in_hull(point, hull_vertices)])
+        self.curr_points = np.array([point for point in self.curr_points if in_hull(point, self.hull)])
         self.index += 1
 
         self.all_hulls.append(halfspace_intersection.intersections)
@@ -1205,7 +990,6 @@ class HalfspaceDepthRegion(RegionSequence):
         return solution.x[:-1]
 
 
-
 class DirectRegion(RegionSequence):
     """
     This class constructs a nested sequence of convex hulls simply by constructing the next convex hull
@@ -1227,14 +1011,28 @@ class DirectRegion(RegionSequence):
         self.points_in_hull = self.curr_points
 
 
-def in_hull(p, hull):
+def in_hull(p, hull, tol=1e-5):
     """
     Tests if point p (a numpy array) is inside a scipy.spatial.ConvexHull object
+    This uses the dot product of the normal vector of each facet of the convex hull
+    and the point to determine if the point is in the correct halfspace for each hyperplane.
+
+    Each facet has an equation of the form a1x1 + a2x2 + ... + anxn + b = 0
+    If we evaluate the lefthand side of this equation and find it to be negative,
+    the point is in the correct halfspace for the hyperplane.
+
     Args:
         p: A numpy array of shape 1 x n
-        hull: mxn array of points
+        hull: A scipy.spatial.ConvexHull object
+        tol: A tolerance for how to close to zero will be considered equal to zero
     """
-    if not isinstance(hull, scipy.spatial.Delaunay):
-        hull = scipy.spatial.Delaunay(hull)
+    for equation in hull.equations:
+        #  equation is a vector of the form [a1 a2 a3 ... an b]
+        normal_vector = equation[:-1]
+        constant_term = equation[-1]
 
-    return hull.find_simplex(p) >= 0
+        if np.dot(normal_vector, p) + constant_term > tol:  # on wrong side
+            return False
+
+    else:
+        return True

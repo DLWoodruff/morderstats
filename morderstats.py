@@ -49,16 +49,16 @@ parser.add_argument("--write-directory",
                     dest="write_directory",
                     type=str)
 parser.add_argument("--alpha",
-                    help="The alpha level for the prediction region"
-                         "If it is unspecified, it will produce every hull"
+                    help="The alpha level for the prediction region "
+                         "If it is unspecified, it will produce every hull "
                          "for alpha=.01-.99.",
                     dest="alpha",
                     type=float,
                     default=None)
 
 parser.add_argument("--use-pyhull",
-                    help="If this option is set, then the program will use the implementation"
-                         "of the halfspace algorithm which is dependent on pyhull. If it is not"
+                    help="If this option is set, then the program will use the implementation "
+                         "of the halfspace algorithm which is dependent on pyhull. If it is not "
                          "set, it will try to use the scipy implementation",
                     dest="use_pyhull",
                     action="store_true")
@@ -130,9 +130,9 @@ def mahalanobis_regions(points, write_directory, write_file, alpha=None):
 
     Args:
         points (np.ndarray): A numpy array of points n x p where n is number of points, p is dimension of points
-        write_directory: The directory which will contain the write files
-        write_file: The name of the file which contains the region information
-        alpha: The desired alpha level for the prediction region, if None, then calculates for alpha=1,..,100
+        write_directory (str): The directory which will contain the write files
+        write_file (str): The name of the file which contains the region information
+        alpha (float): The desired alpha level for the prediction region, if None, then calculates for alpha=1,..,100
     """
     region = distributions.MahalanobisRegion(points)
     peels = []
@@ -140,10 +140,10 @@ def mahalanobis_regions(points, write_directory, write_file, alpha=None):
     if alpha is not None:
         region.set_region(alpha)
         hull = region.hull
-        list_of_points = region.curr_points
         realized_alpha = region.realized_alpha
         peels = [hull.points[hull.vertices]]
         alphas = [realized_alpha]
+        region.plot('mahalanobis_region', write_directory)
     else:
         alphas = []
         for i in range(1, 100):
@@ -158,8 +158,8 @@ def mahalanobis_regions(points, write_directory, write_file, alpha=None):
             peels.append(hull_points)
             alphas.append(realized_alpha)
         list_of_points = region.all_points
+        plot_regions(peels, list_of_points, write_directory, 'mahalanobis_regions')
 
-    plot_regions(peels, list_of_points, write_directory, 'mahalanobis_region')
     write_regions(peels, alphas, write_directory, write_file)
 
 
@@ -178,7 +178,7 @@ def halfspace_regions(points, write_directory, write_file, alpha=None):
     region = distributions.HalfspaceDepthRegion(points)
 
     if USE_PYHULL:
-        distr = distributions.MultivariateEmpriicalDistribution(points, raw_data=True)
+        distr = distributions.MultivariateEmpiricalDistribution(points, raw_data=True)
         if alpha is not None:
             list_of_points, hull, _, realized_alpha = distr.halfspacedepth_quantile_region(alpha)
             peels = [hull.points[hull.vertices]]
@@ -188,19 +188,20 @@ def halfspace_regions(points, write_directory, write_file, alpha=None):
             peels = distr.allhulls
             alphas = distr.alphas
             list_of_points = np.array(distr.data_matrix)
+        plot_regions(peels, list_of_points, write_directory, 'halfspace_region')
     else:
         if alpha is not None:
             region.set_region(alpha)
             peels = [region.hull.points[region.hull.vertices]]
             alphas = [region.realized_alpha]
-            list_of_points = region.all_points
+            region.plot('halfspace_region', write_directory)
         else:
             region.set_region(1)
             peels = region.all_hulls
             alphas = region.all_alphas
-            list_of_points = region.all_points
+            region.plot_sequence('halfspace_regions', write_directory)
 
-    plot_regions(peels, list_of_points, write_directory, 'halfspace_region')
+
     write_regions(peels, alphas, write_directory, write_file)
 
 
@@ -228,19 +229,19 @@ def direct_regions(points, write_directory, write_file, alpha=None):
             peels = distr.allhulls
             alphas = distr.alphas
             list_of_points = np.array(distr.data_matrix)
+        plot_regions(peels, list_of_points, write_directory, 'direct_region')
     else:
         if alpha is not None:
             region.set_region(alpha)
             peels = [region.hull.points[region.hull.vertices]]
             alphas = [region.realized_alpha]
-            list_of_points = region.all_points
+            region.plot('direct_region', write_directory)
         else:
             region.set_region(1)
             peels = region.all_hulls
             alphas = region.all_alphas
-            list_of_points = region.all_points
+            region.plot_sequence('direct_regions', write_directory)
 
-    plot_regions(peels, list_of_points, write_directory, 'direct_region')
     write_regions(peels, alphas, write_directory, write_file)
 
 
