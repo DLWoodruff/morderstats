@@ -246,9 +246,6 @@ class MultivariateEmpiricalDistribution(Distribution):
                 del list_of_points[- round(alpha * float(len(list_of_points))):]
             # numpy points can be plotted
             if len(list_of_points) < self._p + 1:
-                print("Skipping time, because you do not have enough available points to produce a convex hull. "
-                      "You need at least %d points, but you only supplied %d points"
-                      % ((self._p + 1), len(list_of_points)))
                 return None, None, None, None
                 # raise RuntimeError("""
                 # You do not have enough available points to produce a convex hull.
@@ -259,14 +256,9 @@ class MultivariateEmpiricalDistribution(Distribution):
                 try:
                     hull = scipy.spatial.ConvexHull(np_points)
                 except scipy.spatial.qhull.QhullError:
-                    print("Skipping time, because your data can not produce a convex hull. "
-                          "You provided %d points for %d dimensions. "
-                          "If the first number is much larger than the second, you might have corrupted data. "
-                          "If this occurs on every datetime, you might be comparing data with itself."
-                          % (len(list_of_points), self._p))
                     return None, None, None, None
                 realized_alpha = len(list_of_points)/all_points
-                print("realized alpha:", round(1 - realized_alpha, 2))
+                #print("realized alpha:", round(1 - realized_alpha, 2))
                 return np_points, hull, list_of_points, 1 - realized_alpha
 
     def get_hyperplanes(self, pointslist):
