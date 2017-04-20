@@ -1,31 +1,27 @@
+usage: morderstats.py [-h] [--sources-file SOURCES_FILE] [--method METHOD]
+                      [--write-file WRITE_FILE]
+                      [--write-directory WRITE_DIRECTORY] [--alpha ALPHA]
+                      [--use-pyhull]
+
+optional arguments:
   -h, --help            show this help message and exit
-
   --sources-file SOURCES_FILE
-                        The file containing the data to compute
-                        prediction regions with
-
-  --method METHOD       The method for producing quantile regions.
-
-                        Can be one of the following methods:
-
-                        mahal: uses mahalanobis
-                        distance to produce regions
-
-                        halfspace: Uses halfspace
-                        peeling to produce regions
-
-                        naive: Naively peels off
+                        The file which contains the data
+  --method METHOD       The method for producing quantile regions.Can be one
+                        of the following methods:mahal: uses mahalanobis
+                        distance to produce regionshalfspace: Uses halfspace
+                        peeling to produce regionsdirect: Directly peels off
                         convex hulls to produce regions
   --write-file WRITE_FILE
-                        The name of the file to write
-                        the convex sets which
+                        The name of the file to write the convex sets which
                         define the regions
-
   --write-directory WRITE_DIRECTORY
                         The name of the directory which will contain the
                         written files and plots
-
-  --alpha ALPHA         The alpha level for the prediction region
-                        If it is unspecified,
-                        it will produce every hull for
+  --alpha ALPHA         The alpha level for the prediction region If it is
+                        unspecified, it will produce every hull for
                         alpha=.01-.99.
+  --use-pyhull          If this option is set, then the program will use the
+                        implementation of the halfspace algorithm which is
+                        dependent on pyhull. If it is not set, it will try to
+                        use the scipy implementation
