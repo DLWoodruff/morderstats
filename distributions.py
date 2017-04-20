@@ -402,11 +402,6 @@ class MultivariateEmpiricalDistribution(Distribution):
         try:
             hull = scipy.spatial.ConvexHull(list_of_points)
         except scipy.spatial.qhull.QhullError:
-            print("Skipping time, because your data can not produce a convex hull. "
-                  "You provided %d points for %d dimensions. "
-                  "If the first number is much larger than the second, you might have corrupted data. "
-                  "If this occurs on every datetime, you might be comparing data with itself."
-                  % (len(list_of_points), self._p))
             return None, None, None, None
         self.allhulls.append(nppoints)
         self.alphas.append(1)
@@ -422,11 +417,6 @@ class MultivariateEmpiricalDistribution(Distribution):
             try:
                 scipy.spatial.ConvexHull(points_to_display)
             except scipy.spatial.qhull.QhullError:
-                print("Skipping time, because your data can not produce a convex hull. "
-                      "You provided %d points for %d dimensions. "
-                      "If the first number is much larger than the second, you might have corrupted data. "
-                      "If this occurs on every datetime, you might be comparing data with itself."
-                      % (len(points_to_display), self._p))
                 return None, None, None, None
 
             relevant_hyperplanes = []
@@ -443,11 +433,6 @@ class MultivariateEmpiricalDistribution(Distribution):
             try:
                 hull = scipy.spatial.ConvexHull(points)
             except scipy.spatial.qhull.QhullError:
-                print("Skipping time, because your data can not produce a convex hull. "
-                      "You provided %d points for %d dimensions. "
-                      "If the first number is much larger than the second, you might have corrupted data. "
-                      "If this occurs on every datetime, you might be comparing data with itself."
-                      % (len(points_to_display), self._p))
                 return None, None, None, None
 
             # this following block of code checks if a point should be displayed in the end for every point.
@@ -459,11 +444,6 @@ class MultivariateEmpiricalDistribution(Distribution):
                 try:
                     point_checker_hull = scipy.spatial.ConvexHull(point_checker)
                 except scipy.spatial.qhull.QhullError:
-                    print("Skipping time, because your data can not produce a convex hull. "
-                          "You provided %d points for %d dimensions. "
-                          "If the first number is much larger than the second, you might have corrupted data. "
-                          "If this occurs on every datetime, you might be comparing data with itself."
-                          % (len(points_to_display), self._p))
                     return None, None, None, None
                 if point_checker_hull.area == hull.area:
                     points_to_display.append(point)
