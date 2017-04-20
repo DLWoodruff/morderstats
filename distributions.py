@@ -149,11 +149,7 @@ class MultivariateEmpiricalDistribution(Distribution):
                 try:
                     hull = scipy.spatial.ConvexHull(list_of_points)
                 except scipy.spatial.qhull.QhullError:
-                    print("Skipping time, because your data can not produce a convex hull. "
-                          "You provided %d points for %d dimensions. "
-                          "If the first number is much larger than the second, you might have corrupted data. "
-                          "If this occurs on every datetime, you might be comparing data with itself."
-                          % (len(list_of_points), self._p))
+                    pass
                 return np_points, hull, list_of_points, 1
             i = 0
             step = 1
@@ -167,16 +163,9 @@ class MultivariateEmpiricalDistribution(Distribution):
                 try:
                     hull = scipy.spatial.ConvexHull(points)
                 except scipy.spatial.qhull.QhullError:
-                    print("Skipping time, because your data can not produce a convex hull. "
-                          "You provided %d points for %d dimensions. "
-                          "If the first number is much larger than the second, you might have corrupted data. "
-                          "If this occurs on every datetime, you might be comparing data with itself."
-                          % (len(points), self._p))
+
                     return None, None, None, None
                 except IndexError:
-                    print("Skipping time, because your data can not produce a convex hull. "
-                          "You provided %d points for %d dimensions. "
-                          % (len(points), self._p))
                     return None, None, None, None
                 oldhull = hull
                 oldpoints = points.copy()
@@ -202,28 +191,20 @@ class MultivariateEmpiricalDistribution(Distribution):
                 # if the old hull was closer to the quantile than the new hull, we should use the old hull.
                 if abs(1 - len(oldpoints)/len(list_of_points) - alpha) < abs(1 - len(points)/len(list_of_points) - alpha):
                     realized_alpha = len(oldpoints)/len(list_of_points)
-                    print("realized alpha:", round(1 - realized_alpha, 2))
+                    #print("realized alpha:", round(1 - realized_alpha, 2))
                     return oldnppoints, oldhull, oldpoints, 1 - realized_alpha
 
                 try:
                     hull = scipy.spatial.ConvexHull(points)
                 except scipy.spatial.qhull.QhullError:
-                    print("Skipping time, because your data can not produce a convex hull. "
-                          "You provided %d points for %d dimensions. "
-                          "If the first number is much larger than the second, you might have corrupted data. "
-                          "If this occurs on every datetime, you might be comparing data with itself."
-                          % (len(points), self._p))
                     return None, None, None, None
                 except IndexError:
-                    print("Skipping time, because your data can not produce a convex hull. "
-                          "You provided %d points for %d dimensions. "
-                          % (len(points), self._p))
                     return None, None, None, None
                 np_points = np.array(points)
                 self.allhulls.append(np_points)
                 i += 1
             realized_alpha = len(points) / len(list_of_points)
-            print("realized alpha:", round(1 - realized_alpha, 2))
+            #print("realized alpha:", round(1 - realized_alpha, 2))
             return np_points, hull, points, 1 - realized_alpha
 
     def mahalanobis_quantile_region(self, alpha):
